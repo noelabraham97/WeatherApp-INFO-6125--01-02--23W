@@ -34,6 +34,9 @@ class ViewController: UIViewController {
         //set deligate
         mapView.delegate = self
         
+        //enable showing user loaction on map
+        mapView.showsUserLocation = true
+        
         //Fanshawe: 43.0130, -81.1994
         let location = getFanshaweLocation()
         
@@ -81,6 +84,7 @@ extension ViewController: MKMapViewDelegate{
             //add a button to right side of callout
             
             let button = UIButton(type: .detailDisclosure)
+            button.tag = 100
             view.rightCalloutAccessoryView = button
             
             //add an image to left side of callout
@@ -98,6 +102,20 @@ extension ViewController: MKMapViewDelegate{
             }
         }
         return view
+    }
+    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
+        print("button Clicked \(control.tag)")
+        
+        guard let coordinates = view.annotation?.coordinate else{
+            return
+        }
+        
+        let launchOptions = [
+            MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking
+        ]
+        
+        let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: coordinates))
+        mapItem.openInMaps(launchOptions: launchOptions)
     }
 }
 
