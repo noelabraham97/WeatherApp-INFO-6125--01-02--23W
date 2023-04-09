@@ -27,7 +27,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        // print(locations.last)
         location = locations.last!
         setupMap(location: locations.last!)
         print("\(locations.last!.coordinate.latitude), \(locations.last!.coordinate.longitude)")
@@ -60,16 +59,77 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             }
             
             if let weatherResponse = self.parseJson(data: data){
-                var color: UIColor = UIColor.systemBlue
+                var annotationColor: UIColor = UIColor.systemBlue
+                var weatherImage: UIImage = UIImage(systemName: "wind")!
+                let currentTemp = weatherResponse.current.temp_c
+                let currentWeatherCondition = weatherResponse.current.condition.text
                 
+                
+                if(currentTemp > 35){
+                    annotationColor = UIColor.systemRed
+                }else if(currentTemp > 24 && currentTemp < 31){
+                    annotationColor = UIColor.orange
+                }else if(currentTemp > 16 && currentTemp < 25){
+                    annotationColor = UIColor.systemYellow
+                }else if(currentTemp > 11 && currentTemp < 17){
+                    annotationColor = UIColor.systemCyan
+                }else if(currentTemp >= 0 && currentTemp < 12){
+                    annotationColor = UIColor.blue
+                }else if(currentTemp < 0){
+                    annotationColor = UIColor.purple
+                }
+                
+                switch(weatherResponse.current.condition.code){
+                    
+                case 1030 : weatherImage = UIImage(systemName: "wind")!
+                    
+                    
+                case 1000 : weatherImage = UIImage(systemName: "sun.max")!
+                    
+                    
+                case 1003 : weatherImage = UIImage(systemName: "cloud.fill")!
+                    
+                case 1006 : weatherImage = UIImage(systemName: "cloud.fill")!
+                    
+                    
+                case 1135 : weatherImage = UIImage(systemName: "cloud.fog.fill")!
+                    
+                    
+                case 1114 : weatherImage = UIImage(systemName: "wind.snow")!
+                    
+                    
+                case 1183 : weatherImage = UIImage(systemName: "cloud.rain")!
+                    
+                    
+                case 1240 : weatherImage = UIImage(systemName: "cloud.rain.fill")!
+                    
+                    
+                case 1163 : weatherImage = UIImage(systemName: "cloud.drizzle")!
+                    
+                    
+                case 1279 : weatherImage = UIImage(systemName: "cloud.bolt.rain")!
+                    
+                    
+                case 1255 : weatherImage = UIImage(systemName: "cloud.snow.fill")!
+                    
+                    
+                case 1072 : weatherImage = UIImage(systemName: "cloud.sleet")!
+                    
+                    
+                case 1066 : weatherImage = UIImage(systemName: "cloud.snow")!
+                    
+                    
+                default: print("Error in switch")
+                }
                 let annotation = MyAnnotation(coordinate: location.coordinate,
-                                              title: "\(weatherResponse.current.condition.text)",
-                                              subtitle: "My subtitle", glyphText: "\(weatherResponse.current.temp_c)",
-                                              markerTintColor: UIColor.systemYellow)
+                                              title: "\(currentWeatherCondition)",
+                                              subtitle: "Temperature:\(currentTemp) Feels like:\(weatherResponse.current.feelslike_c)", glyphText: "\(currentTemp)",
+                                              markerTintColor: annotationColor, tintColor: annotationColor,image: weatherImage)
                 
                 mapView.addAnnotation(annotation)
                 print(weatherResponse.location.name)
                 print(weatherResponse.current.temp_c)
+                print(weatherResponse.current.feelslike_c)
             }
         }
         
@@ -113,7 +173,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
                                         latitudinalMeters: radiusInMeters,
                                         longitudinalMeters: radiusInMeters)
         
-        mapView.setRegion(region, animated: true)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            self.mapView.setRegion(region, animated: true)
+        }
+        
+        
         
         //camera boundary
         
@@ -144,8 +208,8 @@ extension ViewController: MKMapViewDelegate{
         view.rightCalloutAccessoryView = button
         
         //add an image to left side of callout
-        let image = UIImage(systemName: "graduationcap.circle.fill")
-        view.leftCalloutAccessoryView = UIImageView(image: image)
+        //let image = UIImage(systemName: "graduationcap.circle.fill")
+        
         
         //change colour of pin/marker"
         
@@ -155,8 +219,14 @@ extension ViewController: MKMapViewDelegate{
         if let myAnnotaion = annotation as? MyAnnotation{
             view.glyphText = myAnnotaion.glyphText
             view.markerTintColor = myAnnotaion.markerTintColor
+            view.tintColor = myAnnotaion.tintColor
+            view.leftCalloutAccessoryView = UIImageView(image: myAnnotaion.image)
         }
         return view
+    }
+    
+    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
+        performSegue(withIdentifier: "goToWeatherScreen", sender: self)
     }
 }
 
@@ -166,13 +236,17 @@ class MyAnnotation: NSObject, MKAnnotation{
     var subtitle: String?
     var glyphText: String?
     var markerTintColor: UIColor?
+    var tintColor: UIColor?
+    var image : UIImage?
     
-    init(coordinate: CLLocationCoordinate2D, title: String, subtitle: String, glyphText: String? = nil, markerTintColor: UIColor? = UIColor.systemCyan) {
+    init(coordinate: CLLocationCoordinate2D, title: String, subtitle: String, glyphText: String? = nil, markerTintColor: UIColor? = UIColor.systemCyan, tintColor: UIColor? = UIColor.systemCyan, image: UIImage?) {
         self.coordinate = coordinate
         self.title = title
         self.subtitle = subtitle
         self.glyphText =  glyphText
         self.markerTintColor = markerTintColor
+        self.tintColor = tintColor
+        self.image = image
         
         super.init()
     }
@@ -191,10 +265,15 @@ struct Weather: Decodable {
     let temp_c: Float
     let temp_f: Float
     let condition: WeatherCondition
+    let feelslike_c: Float
+    let feelslike_f: Float
+    
 }
 
 struct WeatherCondition: Decodable {
     let text: String
     let code: Int
 }
+
+
 
