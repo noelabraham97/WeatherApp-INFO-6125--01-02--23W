@@ -20,7 +20,7 @@ class ForecastViewController: UIViewController {
     
     @IBOutlet weak var tableView: UITableView!
     
-    var forecastItems: [ForecastWeather]?
+    var forecastItems: [ForecastWeather] = []
     
     var weatherResponse: WeatherResponse?
     
@@ -37,22 +37,28 @@ class ForecastViewController: UIViewController {
     
     
     
-    private func loadWeatherData(){
+    func loadWeatherData(){
         
         guard let weatherResponse = weatherResponse else{
             return
         }
-        temperatureLabel.text = "\(Int(weatherResponse.current.temp_c))°"
-        locationLabel.text = String(weatherResponse.location.name)
-        weatherCondition.text = String(weatherResponse.current.condition.text)
-        highTemperature.text = "\(Int(weatherResponse.forecast.forecastday[0].day.maxtemp_c))°"
-        lowTemperature.text = "\(Int(weatherResponse.forecast.forecastday[0].day.mintemp_c))°"
+        DispatchQueue.main.async { [self] in
+            temperatureLabel.text = "\(Int(weatherResponse.current.temp_c))°"
+            locationLabel.text = String(weatherResponse.location.name)
+            weatherCondition.text = String(weatherResponse.current.condition.text)
+            highTemperature.text = "\(Int(weatherResponse.forecast.forecastday[0].day.maxtemp_c))°"
+            lowTemperature.text = "\(Int(weatherResponse.forecast.forecastday[0].day.mintemp_c))°"
+        }
+        
         
         weatherForecast(weatherResponse: weatherResponse)
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+        }
         
     }
     
-    private func weatherForecast(weatherResponse: WeatherResponse){
+     func weatherForecast(weatherResponse: WeatherResponse){
         
         forecastItems = []
         var weatherImage: UIImage?
@@ -108,7 +114,7 @@ class ForecastViewController: UIViewController {
             }
             
            
-            forecastItems?.append(ForecastWeather(day: dateFormatter.string(from: date), uiImage: weatherImage, temp: "\(Int(weatherResponse.forecast.forecastday[i].day.avgtemp_c))"))
+            forecastItems.append(ForecastWeather(day: dateFormatter.string(from: date), uiImage: weatherImage, temp: "\(Int(weatherResponse.forecast.forecastday[i].day.avgtemp_c))"))
         }
         
         
@@ -119,7 +125,7 @@ class ForecastViewController: UIViewController {
 extension ForecastViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "forecastIdentifier", for: indexPath)
-        let items = forecastItems![indexPath.row]
+        let items = forecastItems[indexPath.row]
         var content = cell.defaultContentConfiguration()
         
         content.text = items.day
@@ -132,8 +138,8 @@ extension ForecastViewController: UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        print("sadsada\(forecastItems!.count)")
-        return forecastItems!.count
+        print("sadsada\(forecastItems.count)")
+        return forecastItems.count
     }
 }
 

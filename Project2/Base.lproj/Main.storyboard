@@ -18,16 +18,49 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="3xW-qv-Boz">
-                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="543"/>
                                 <standardMapConfiguration key="preferredConfiguration"/>
                             </mapView>
+                            <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="6di-jR-Tmx">
+                                <rect key="frame" x="0.0" y="769" width="393" height="49"/>
+                                <items>
+                                    <barButtonItem style="plain" systemItem="flexibleSpace" id="ndZ-cS-fIJ"/>
+                                    <barButtonItem title="Add" id="xLq-g2-Siv"/>
+                                </items>
+                            </toolbar>
+                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="adc-eZ-U4P">
+                                <rect key="frame" x="0.0" y="543" width="393" height="231"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="231" id="Kgw-zw-Loj"/>
+                                </constraints>
+                                <prototypes>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" id="rOZ-Bn-hc9">
+                                        <rect key="frame" x="0.0" y="50" width="393" height="43.666667938232422"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="rOZ-Bn-hc9" id="HIg-v8-728">
+                                            <rect key="frame" x="0.0" y="0.0" width="393" height="43.666667938232422"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </tableViewCellContentView>
+                                    </tableViewCell>
+                                </prototypes>
+                            </tableView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
+                            <constraint firstItem="3xW-qv-Boz" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="0XU-H8-hNz"/>
+                            <constraint firstItem="adc-eZ-U4P" firstAttribute="trailing" secondItem="6di-jR-Tmx" secondAttribute="trailing" id="2eD-aK-l4i"/>
+                            <constraint firstItem="6di-jR-Tmx" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="6hr-8e-CAh"/>
+                            <constraint firstItem="adc-eZ-U4P" firstAttribute="leading" secondItem="6di-jR-Tmx" secondAttribute="leading" id="BvL-bc-2T7"/>
+                            <constraint firstItem="adc-eZ-U4P" firstAttribute="top" secondItem="3xW-qv-Boz" secondAttribute="bottom" id="F88-q2-2X2"/>
                             <constraint firstItem="3xW-qv-Boz" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="FiQ-RM-p9h"/>
                             <constraint firstItem="3xW-qv-Boz" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" id="Ggj-Nz-cPC"/>
-                            <constraint firstAttribute="bottom" secondItem="3xW-qv-Boz" secondAttribute="bottom" id="c0i-TS-euq"/>
+                            <constraint firstItem="3xW-qv-Boz" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" id="IWY-WZ-D2n"/>
+                            <constraint firstItem="6di-jR-Tmx" firstAttribute="trailing" secondItem="6Tk-OE-BBY" secondAttribute="trailing" id="MZs-8q-E7Q"/>
+                            <constraint firstItem="3xW-qv-Boz" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="R3h-I9-ohK"/>
+                            <constraint firstItem="6di-jR-Tmx" firstAttribute="bottom" secondItem="adc-eZ-U4P" secondAttribute="bottom" constant="44" id="VvV-LB-BDi"/>
+                            <constraint firstItem="6di-jR-Tmx" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="cSZ-dt-8ms"/>
                             <constraint firstItem="3xW-qv-Boz" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="pDM-1d-2Jo"/>
                         </constraints>
                     </view>

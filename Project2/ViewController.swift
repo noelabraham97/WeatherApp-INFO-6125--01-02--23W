@@ -82,7 +82,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
                     annotationColor = UIColor.purple
                 }
                 
-                var config = UIImage.SymbolConfiguration(paletteColors: [.blue, .black, .yellow])
+                let config = UIImage.SymbolConfiguration(paletteColors: [ .black, .yellow])
                 
                 switch(weatherResponse.current.condition.code){
                     
@@ -148,6 +148,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             switch result {
             case .success(let data):
                 viewControllerForecast.weatherResponse = data
+                viewControllerForecast.loadWeatherData()
             case .failure(let error):
                 print(error)
                 
