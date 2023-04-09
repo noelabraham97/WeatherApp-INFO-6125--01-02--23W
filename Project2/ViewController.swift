@@ -10,7 +10,8 @@ import MapKit
 class ViewController: UIViewController, CLLocationManagerDelegate {
     
     @IBOutlet weak var mapView: MKMapView!
-    var location: CLLocation = CLLocation(latitude: 43.0130, longitude: -81.1994)
+    var location: CLLocation?
+    var weatherRes: WeatherResponse?
     
     private let locationManager: CLLocationManager = CLLocationManager()
     
@@ -29,12 +30,14 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         location = locations.last!
         setupMap(location: locations.last!)
-        print("\(locations.last!.coordinate.latitude), \(locations.last!.coordinate.longitude)")
-        loadWeatherData(search: "\(locations.last!.coordinate.latitude), \(locations.last!.coordinate.longitude)")
+        loadWeatherData(search: "\(locations.last!.coordinate.latitude), \(locations.last!.coordinate.longitude)") { result in
+            
+        }
     }
     
     
-    private func loadWeatherData(search: String?){
+    private func loadWeatherData(search: String?,
+                                 completion: @escaping (Result<WeatherResponse, Error>) -> Void){
         guard let search = search else{
             return
         }
@@ -79,69 +82,85 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
                     annotationColor = UIColor.purple
                 }
                 
+                var config = UIImage.SymbolConfiguration(paletteColors: [.blue, .black, .yellow])
+                
                 switch(weatherResponse.current.condition.code){
                     
-                case 1030 : weatherImage = UIImage(systemName: "wind")!
+                case 1030 : weatherImage = UIImage(systemName: "wind", withConfiguration: config)!
                     
+                case 1000 : weatherImage = UIImage(systemName: "sun.max", withConfiguration: config)!
                     
-                case 1000 : weatherImage = UIImage(systemName: "sun.max")!
+                case 1003 : weatherImage = UIImage(systemName: "cloud.fill", withConfiguration: config)!
                     
+                case 1006 : weatherImage = UIImage(systemName: "cloud.fill", withConfiguration: config)!
                     
-                case 1003 : weatherImage = UIImage(systemName: "cloud.fill")!
+                case 1135 : weatherImage = UIImage(systemName: "cloud.fog.fill", withConfiguration: config)!
+
+                case 1114 : weatherImage = UIImage(systemName: "wind.snow", withConfiguration: config)!
+                                        
+                case 1183 : weatherImage = UIImage(systemName: "cloud.rain", withConfiguration: config)!
                     
-                case 1006 : weatherImage = UIImage(systemName: "cloud.fill")!
+                case 1240 : weatherImage = UIImage(systemName: "cloud.rain.fill", withConfiguration: config)!
                     
+                case 1163 : weatherImage = UIImage(systemName: "cloud.drizzle", withConfiguration: config)!
                     
-                case 1135 : weatherImage = UIImage(systemName: "cloud.fog.fill")!
+                case 1279 : weatherImage = UIImage(systemName: "cloud.bolt.rain", withConfiguration: config)!
                     
+                case 1255 : weatherImage = UIImage(systemName: "cloud.snow.fill", withConfiguration: config)!
                     
-                case 1114 : weatherImage = UIImage(systemName: "wind.snow")!
+                case 1072 : weatherImage = UIImage(systemName: "cloud.sleet", withConfiguration: config)!
                     
-                    
-                case 1183 : weatherImage = UIImage(systemName: "cloud.rain")!
-                    
-                    
-                case 1240 : weatherImage = UIImage(systemName: "cloud.rain.fill")!
-                    
-                    
-                case 1163 : weatherImage = UIImage(systemName: "cloud.drizzle")!
-                    
-                    
-                case 1279 : weatherImage = UIImage(systemName: "cloud.bolt.rain")!
-                    
-                    
-                case 1255 : weatherImage = UIImage(systemName: "cloud.snow.fill")!
-                    
-                    
-                case 1072 : weatherImage = UIImage(systemName: "cloud.sleet")!
-                    
-                    
-                case 1066 : weatherImage = UIImage(systemName: "cloud.snow")!
-                    
+                case 1066 : weatherImage = UIImage(systemName: "cloud.snow", withConfiguration: config)!
                     
                 default: print("Error in switch")
                 }
+                
+                guard let location = location else {
+                    return
+                }
+                
                 let annotation = MyAnnotation(coordinate: location.coordinate,
                                               title: "\(currentWeatherCondition)",
-                                              subtitle: "Temperature:\(currentTemp) Feels like:\(weatherResponse.current.feelslike_c)", glyphText: "\(currentTemp)",
+                                              subtitle: "Temperature:\(currentTemp) Feels like:\(weatherResponse.current.feelslike_c)", glyphText: "\(Int(currentTemp))°",
                                               markerTintColor: annotationColor, tintColor: annotationColor,image: weatherImage)
                 
                 mapView.addAnnotation(annotation)
-                print(weatherResponse.location.name)
-                print(weatherResponse.current.temp_c)
-                print(weatherResponse.current.feelslike_c)
+                completion(.success(weatherResponse))
             }
+            
+           
+            
+            
         }
         
         dataTask.resume()
     }
     
+
+
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        
+        var viewControllerForecast = segue.destination as! ForecastViewController
+        
+        if let location = location {
+            loadWeatherData(search: "\(location.coordinate.latitude), \(location.coordinate.longitude)") { result in
+            
+            switch result {
+            case .success(let data):
+                viewControllerForecast.weatherResponse = data
+            case .failure(let error):
+                print(error)
+                
+            }
+        }}
+      
+    }
     
     private func getURL(query: String) -> URL? {
         let baseUrl = "https://api.weatherapi.com/v1"
         let currentEndpoint = "/forecast.json"
         let apiKey = "c142512622db4ee88b1171859232003"
-        let days = "3"
+        let days = "7"
         guard let url = "\(baseUrl)\(currentEndpoint)?key=\(apiKey)&q=\(query)&days=\(days)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             return nil
         }
@@ -255,6 +274,7 @@ class MyAnnotation: NSObject, MKAnnotation{
 struct WeatherResponse: Decodable{
     let location: Location
     let current: Weather
+    let forecast: Forecast
 }
 
 struct Location: Decodable{
@@ -273,6 +293,23 @@ struct Weather: Decodable {
 struct WeatherCondition: Decodable {
     let text: String
     let code: Int
+}
+
+struct Forecast: Decodable{
+    let forecastday: [ForecastDay]
+    
+}
+
+struct ForecastDay: Decodable{
+    let day: Day
+    let date: String
+}
+
+struct Day: Decodable{
+    let maxtemp_c: Float
+    let mintemp_c: Float
+    let avgtemp_c: Float
+    let condition: WeatherCondition
 }
 
 
