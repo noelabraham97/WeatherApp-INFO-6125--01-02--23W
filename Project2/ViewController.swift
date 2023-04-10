@@ -3,18 +3,15 @@
 //  Project2
 //
 //  Created by Noel Abraham Biju on 2023-04-03.
-//
 
 import UIKit
 import MapKit
 class ViewController: UIViewController, CLLocationManagerDelegate {
-    
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var mapView: MKMapView!
     var location: CLLocation?
     var weatherRes: WeatherResponse?
     var weatherItem: [WeatherInformation] = []
-    
     private let locationManager: CLLocationManager = CLLocationManager()
     
     override func viewDidLoad() {
@@ -25,23 +22,17 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         tableView.dataSource = self
         locationManager.requestWhenInUseAuthorization()
         locationManager.startUpdatingLocation()
-        
     }
-    
-    
-    
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         location = locations.last!
         setupMap(location: locations.last!)
         loadWeatherData(search: "\(locations.last!.coordinate.latitude), \(locations.last!.coordinate.longitude)") { result in
-            
         }
     }
     
-    
-        func loadWeatherData(search: String?,
-                                 completion: @escaping (Result<WeatherResponse, Error>) -> Void){
+    func loadWeatherData(search: String?,
+                         completion: @escaping (Result<WeatherResponse, Error>) -> Void){
         guard let search = search else{
             return
         }
@@ -51,7 +42,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         }
         
         let session = URLSession.shared
-        
         let dataTask = session.dataTask(with: url) { [self]data, response, error in
             print("Networkcall complete")
             
@@ -59,7 +49,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
                 print("Received error")
                 return
             }
-            
             guard let data = data else{
                 print("No data found")
                 return
@@ -70,7 +59,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
                 var weatherImage: UIImage = UIImage(systemName: "wind")!
                 let currentTemp = weatherResponse.current.temp_c
                 let currentWeatherCondition = weatherResponse.current.condition.text
-                
                 
                 if(currentTemp > 35){
                     annotationColor = UIColor.systemRed
@@ -85,7 +73,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
                 }else if(currentTemp < 0){
                     annotationColor = UIColor.purple
                 }
-                
                 let config = UIImage.SymbolConfiguration(paletteColors: [ .black, .yellow])
                 
                 switch(weatherResponse.current.condition.code){
@@ -99,9 +86,9 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
                 case 1006 : weatherImage = UIImage(systemName: "cloud.fill", withConfiguration: config)!
                     
                 case 1135 : weatherImage = UIImage(systemName: "cloud.fog.fill", withConfiguration: config)!
-
+                    
                 case 1114 : weatherImage = UIImage(systemName: "wind.snow", withConfiguration: config)!
-                                        
+                    
                 case 1183 : weatherImage = UIImage(systemName: "cloud.rain", withConfiguration: config)!
                     
                 case 1240 : weatherImage = UIImage(systemName: "cloud.rain.fill", withConfiguration: config)!
@@ -125,32 +112,20 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
                 
                 let annotation = MyAnnotation(coordinate: location.coordinate,
                                               title: "\(currentWeatherCondition)",
-                                              subtitle: "Temperature:\(currentTemp) Feels like:\(weatherResponse.current.feelslike_c)", glyphText: "\(Int(currentTemp))°",
+                                              subtitle: "Temperature:\(Int(currentTemp))° Feels like:\(Int(weatherResponse.current.feelslike_c))°", glyphText: "\(Int(currentTemp))°",
                                               markerTintColor: annotationColor, tintColor: annotationColor,image: weatherImage)
-                
                 mapView.addAnnotation(annotation)
                 completion(.success(weatherResponse))
             }
-            
-           
-            
-            
         }
-        
         dataTask.resume()
     }
-    
     
     @IBAction func onTapAddButton(_ sender: UIBarButtonItem) {
         performSegue(withIdentifier: "goToAddLocationScreen", sender: self)
     }
     
-    
-
-
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        
-    
         if segue.identifier == "goToAddLocationScreen" {
             var viewControllerLocation = segue.destination as! AddLocationViewController
             viewControllerLocation.delegate = self
@@ -160,18 +135,15 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
             
             if let location = location {
                 loadWeatherData(search: "\(location.coordinate.latitude), \(location.coordinate.longitude)") { result in
-                    
                     switch result {
                     case .success(let data):
                         viewControllerForecast.weatherResponse = data
                         viewControllerForecast.loadWeatherData()
                     case .failure(let error):
                         print(error)
-                        
                     }
                 }}
         }
-      
     }
     
     private func getURL(query: String) -> URL? {
@@ -182,10 +154,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         guard let url = "\(baseUrl)\(currentEndpoint)?key=\(apiKey)&q=\(query)&days=\(days)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             return nil
         }
-        
         return URL(string: url)
     }
-    
     
     private func parseJson(data: Data) -> WeatherResponse?{
         let decoder = JSONDecoder()
@@ -198,31 +168,22 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         return weather
     }
     
-    
     private func setupMap( location: CLLocation){
-        
         //set deligate
         mapView.delegate = self
-        
         let radiusInMeters: CLLocationDistance = 1000
-        
         let region = MKCoordinateRegion(center: location.coordinate,
                                         latitudinalMeters: radiusInMeters,
                                         longitudinalMeters: radiusInMeters)
-        
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             self.mapView.setRegion(region, animated: true)
         }
         
-        
-        
         //camera boundary
-        
         let cameraBoundary = MKMapView.CameraBoundary(coordinateRegion: region)
         mapView.setCameraBoundary(cameraBoundary, animated: true)
         
         //zoom Range
-        
         let zoonRange = MKMapView.CameraZoomRange(maxCenterCoordinateDistance: 10000)
         mapView.setCameraZoomRange(zoonRange, animated: true)
     }
@@ -232,7 +193,6 @@ extension ViewController: MKMapViewDelegate{
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         let indentifier = "myIdentifier"
         var view: MKMarkerAnnotationView
-        
         view = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: indentifier)
         view.canShowCallout = true
         
@@ -241,7 +201,6 @@ extension ViewController: MKMapViewDelegate{
         
         let button = UIButton(type: .detailDisclosure)
         view.rightCalloutAccessoryView = button
-    
         
         if let myAnnotaion = annotation as? MyAnnotation{
             view.glyphText = myAnnotaion.glyphText
@@ -274,7 +233,6 @@ class MyAnnotation: NSObject, MKAnnotation{
         self.markerTintColor = markerTintColor
         self.tintColor = tintColor
         self.image = image
-        
         super.init()
     }
 }
@@ -334,10 +292,8 @@ extension ViewController: UITableViewDelegate {
                 
             }
         }
-        
     }
 }
-
 
 extension ViewController: LocationDelegate, UITableViewDataSource {
     func locationDelegateDidFinish(with data: WeatherInformation) {
@@ -348,19 +304,16 @@ extension ViewController: LocationDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return weatherItem.count
     }
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "mainTableView", for: indexPath)
         let weatherItem = weatherItem[indexPath.row]
         var content = cell.defaultContentConfiguration()
         
         content.text = weatherItem.location
-        content.secondaryText = "T:\(weatherItem.temp) H:\(weatherItem.temp_h) L:\(weatherItem.temp_l)"
+        content.secondaryText = "T:\(weatherItem.temp)°  H:\(weatherItem.temp_h)°  L:\(weatherItem.temp_l)°"
         content.image = weatherItem.image
-        
         cell.contentConfiguration = content
-        
         return cell
     }
-    
-    
 }

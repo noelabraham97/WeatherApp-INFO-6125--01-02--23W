@@ -3,7 +3,6 @@
 //  Project2
 //
 //  Created by Noel Abraham Biju on 2023-04-08.
-//
 
 import UIKit
 import MapKit
@@ -14,31 +13,20 @@ class ForecastViewController: UIViewController {
     @IBOutlet weak var temperatureLabel: UILabel!
     @IBOutlet weak var locationLabel: UILabel!
     @IBOutlet weak var weatherCondition: UILabel!
-    
     @IBOutlet weak var lowTemperature: UILabel!
     @IBOutlet weak var highTemperature: UILabel!
-    
     @IBOutlet weak var tableView: UITableView!
-    
     var forecastItems: [ForecastWeather] = []
-    
     var weatherResponse: WeatherResponse?
-    
     let locationManager = CLLocationManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.dataSource = self
         loadWeatherData()
-        
-        
     }
     
-    
-    
-    
     func loadWeatherData(){
-        
         guard let weatherResponse = weatherResponse else{
             return
         }
@@ -49,21 +37,16 @@ class ForecastViewController: UIViewController {
             highTemperature.text = "\(Int(weatherResponse.forecast.forecastday[0].day.maxtemp_c))°"
             lowTemperature.text = "\(Int(weatherResponse.forecast.forecastday[0].day.mintemp_c))°"
         }
-        
-        
         weatherForecast(weatherResponse: weatherResponse)
         DispatchQueue.main.async {
             self.tableView.reloadData()
         }
-        
     }
     
-     func weatherForecast(weatherResponse: WeatherResponse){
-        
+    func weatherForecast(weatherResponse: WeatherResponse){
         forecastItems = []
         var weatherImage: UIImage?
         var config = UIImage.SymbolConfiguration(paletteColors: [.systemYellow, .systemGray])
-        
         
         for i in 0...6 {
             print(weatherResponse.forecast.forecastday[i].date)
@@ -72,10 +55,7 @@ class ForecastViewController: UIViewController {
             let date = dateFormatter.date(from: weatherResponse.forecast.forecastday[i].date)
             dateFormatter.dateFormat = "EEEE"
             
-
-
             switch(weatherResponse.forecast.forecastday[i].day.condition.code){
-
             case 1030 : weatherImage = UIImage(systemName: "wind", withConfiguration: config)!
                 
             case 1000 : weatherImage = UIImage(systemName: "sun.max", withConfiguration: config)!
@@ -85,9 +65,9 @@ class ForecastViewController: UIViewController {
             case 1006 : weatherImage = UIImage(systemName: "cloud.fill", withConfiguration: config)!
                 
             case 1135 : weatherImage = UIImage(systemName: "cloud.fog.fill", withConfiguration: config)!
-
+                
             case 1114 : weatherImage = UIImage(systemName: "wind.snow", withConfiguration: config)!
-                                    
+                
             case 1183 : weatherImage = UIImage(systemName: "cloud.rain", withConfiguration: config)!
                 
             case 1240 : weatherImage = UIImage(systemName: "cloud.rain.fill", withConfiguration: config)!
@@ -101,27 +81,21 @@ class ForecastViewController: UIViewController {
             case 1072 : weatherImage = UIImage(systemName: "cloud.sleet", withConfiguration: config)!
                 
             case 1066 : weatherImage = UIImage(systemName: "cloud.snow", withConfiguration: config)!
-
+                
             default: weatherImage = UIImage(systemName: "cloud", withConfiguration: config)!
             }
             
             guard let weatherImage = weatherImage else {
                 return
             }
-            
             guard let date = date else {
                 return
             }
-            
-           
-            forecastItems.append(ForecastWeather(day: dateFormatter.string(from: date), uiImage: weatherImage, temp: "\(Int(weatherResponse.forecast.forecastday[i].day.avgtemp_c))"))
+            forecastItems.append(ForecastWeather(day: dateFormatter.string(from: date), uiImage: weatherImage, temp: "\(Int(weatherResponse.forecast.forecastday[i].day.avgtemp_c))°"))
         }
-        
-        
     }
-    
-
 }
+
 extension ForecastViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "forecastIdentifier", for: indexPath)
@@ -131,14 +105,12 @@ extension ForecastViewController: UITableViewDataSource {
         content.text = items.day
         content.secondaryText = items.temp
         content.image = items.uiImage
-        
         cell.contentConfiguration = content
-        
         return cell
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        print("sadsada\(forecastItems.count)")
+        print("\(forecastItems.count)")
         return forecastItems.count
     }
 }

@@ -3,37 +3,25 @@
 //  Project2
 //
 //  Created by Noel Abraham Biju on 2023-04-09.
-//
 
 import UIKit
-
 import MapKit
 import CoreLocation
 
-
 class AddLocationViewController: UIViewController, CLLocationManagerDelegate, UITextFieldDelegate {
-
-    
     
     @IBOutlet weak var weatherLocationLabel: UILabel!
     @IBOutlet weak var weatherImage: UIImageView!
-    
     @IBOutlet weak var currentTemperatureLabel: UILabel!
-    
     @IBOutlet weak var weatherConditionLabel: UILabel!
     @IBOutlet weak var searchTextField: UITextField!
     weak var delegate: LocationDelegate?
-    
-    
     let locationManager = CLLocationManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
-        
         displayWeatherImage()
         searchTextField.delegate = self
-        
         let currentLocationManager = self
         currentLocationManager.getCurrentLocation()
         
@@ -42,76 +30,55 @@ class AddLocationViewController: UIViewController, CLLocationManagerDelegate, UI
     private func getCurrentLocation(){
         locationManager.delegate = self
         locationManager.requestWhenInUseAuthorization()
-        
         DispatchQueue.global().async {
             if CLLocationManager.locationServicesEnabled() {
                 self.locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
                 self.locationManager.startUpdatingLocation()
             }
         }
-        
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let locValue: CLLocationCoordinate2D = manager.location?.coordinate else { return }
         print("locations = \(locValue.latitude) \(locValue.longitude)")
         loadWeatherData(search: "\(locValue.latitude),\(locValue.longitude)") { result in
-            
         }
-        
         locationManager.stopUpdatingLocation()
-        
     }
     
     private func displayWeatherImage(){
-        let config = UIImage.SymbolConfiguration(paletteColors: [ .systemYellow, .systemYellow, .systemYellow])
+        let config = UIImage.SymbolConfiguration(paletteColors: [ .systemYellow, .systemGray])
         weatherImage.preferredSymbolConfiguration = config
         weatherImage.image = UIImage(systemName: "sun.max.circle")
     }
     
-    
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.endEditing(true)
-        
         return true
     }
     
-    
-    
-
     @IBAction func onSearchButtonTapped(_ sender: UIButton) {
         loadWeatherData(search: searchTextField.text) { result in
-            
         }
     }
-        
+    
     @IBAction func backButton(_ sender: Any) {
         dismiss(animated: true)
-        
-      
     }
     
     func loadWeatherData(search: String?,
-                             completion: @escaping (Result<WeatherResponse, Error>) -> Void){
+                         completion: @escaping (Result<WeatherResponse, Error>) -> Void){
         guard let search = search else {
             return
         }
         
-        
-        //Step 1: Get URL
         guard let url = getURL(query: search) else{
             print("Could not get URL")
             return
         }
         
-        //Step 2: Create URLSession
         let session = URLSession.shared
-        
-        //step 3:
         let dataTask = session.dataTask(with: url) { data, response, error in
-            // network call finished
-            print("Network call complete")
-            
             guard error == nil else{
                 print("Recived Error")
                 return
@@ -131,11 +98,9 @@ class AddLocationViewController: UIViewController, CLLocationManagerDelegate, UI
                     self.currentTemperatureLabel.text = "\(Int(weatherResponse.current.temp_c))"
                     self.weatherConditionLabel.text = weatherResponse.current.condition.text
                     
-                    
-                    let configuration = UIImage.SymbolConfiguration(paletteColors: [.blue])
+                    let configuration = UIImage.SymbolConfiguration(paletteColors: [.systemYellow, .systemGray])
                     
                     self.weatherImage.preferredSymbolConfiguration = configuration
-                    print(weatherResponse.current.condition.code)
                     switch(weatherResponse.current.condition.code){
                         
                     case 1030 : self.weatherImage.image = UIImage(systemName: "wind")
@@ -176,15 +141,12 @@ class AddLocationViewController: UIViewController, CLLocationManagerDelegate, UI
                         
                     case 1066 : self.weatherImage.image = UIImage(systemName: "cloud.snow")
                         self.weatherConditionLabel.text = weatherResponse.current.condition.text
-                    
+                        
                     default: print("Error in switch")
                     }
                 }
             }
         }
-        
-        
-        //Step 4:
         dataTask.resume()
     }
     
@@ -196,26 +158,21 @@ class AddLocationViewController: UIViewController, CLLocationManagerDelegate, UI
         guard let url = "\(baseUrl)\(currentEndpoint)?key=\(apiKey)&q=\(query)&days=\(days)".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
             return nil
         }
-        
         return URL(string: url)
     }
     
     private func parseJson (data: Data) -> WeatherResponse? {
         let decoder = JSONDecoder()
         var weather: WeatherResponse?
-        
         do{
             weather = try decoder.decode(WeatherResponse.self, from: data)
         } catch{
             print("Error decoding!")
         }
-        
         return weather
     }
     
-    
     @IBAction func addButtonPressed(_ sender: Any) {
-        
         loadWeatherData(search: searchTextField.text) { result in
             switch result {
             case .success(let data):
@@ -225,19 +182,12 @@ class AddLocationViewController: UIViewController, CLLocationManagerDelegate, UI
                     self.delegate?.locationDelegateDidFinish(with: weatherinfo)
                     self.dismiss(animated: true,completion: nil)
                 }
-                
             case .failure(let error):
                 print(error)
-                
             }
         }
-        
-//
     }
-    
 }
-
-
 
 struct WeatherInformation{
     let location: String
