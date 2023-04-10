@@ -9,9 +9,11 @@ import UIKit
 import MapKit
 class ViewController: UIViewController, CLLocationManagerDelegate {
     
+    @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var mapView: MKMapView!
     var location: CLLocation?
     var weatherRes: WeatherResponse?
+    var weatherItem: [WeatherInformation] = []
     
     private let locationManager: CLLocationManager = CLLocationManager()
     
@@ -19,6 +21,8 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         locationManager.delegate = self
+        tableView.delegate = self
+        tableView.dataSource = self
         locationManager.requestWhenInUseAuthorization()
         locationManager.startUpdatingLocation()
         
@@ -36,7 +40,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
     }
     
     
-    private func loadWeatherData(search: String?,
+        func loadWeatherData(search: String?,
                                  completion: @escaping (Result<WeatherResponse, Error>) -> Void){
         guard let search = search else{
             return
@@ -112,7 +116,7 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
                     
                 case 1066 : weatherImage = UIImage(systemName: "cloud.snow", withConfiguration: config)!
                     
-                default: print("Error in switch")
+                default: weatherImage = UIImage(systemName: "cloud.snow", withConfiguration: config)!
                 }
                 
                 guard let location = location else {
@@ -136,24 +140,37 @@ class ViewController: UIViewController, CLLocationManagerDelegate {
         dataTask.resume()
     }
     
+    
+    @IBAction func onTapAddButton(_ sender: UIBarButtonItem) {
+        performSegue(withIdentifier: "goToAddLocationScreen", sender: self)
+    }
+    
+    
 
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         
-        var viewControllerForecast = segue.destination as! ForecastViewController
-        
-        if let location = location {
-            loadWeatherData(search: "\(location.coordinate.latitude), \(location.coordinate.longitude)") { result in
+    
+        if segue.identifier == "goToAddLocationScreen" {
+            var viewControllerLocation = segue.destination as! AddLocationViewController
+            viewControllerLocation.delegate = self
+        }
+        else {
+            var viewControllerForecast = segue.destination as! ForecastViewController
             
-            switch result {
-            case .success(let data):
-                viewControllerForecast.weatherResponse = data
-                viewControllerForecast.loadWeatherData()
-            case .failure(let error):
-                print(error)
-                
-            }
-        }}
+            if let location = location {
+                loadWeatherData(search: "\(location.coordinate.latitude), \(location.coordinate.longitude)") { result in
+                    
+                    switch result {
+                    case .success(let data):
+                        viewControllerForecast.weatherResponse = data
+                        viewControllerForecast.loadWeatherData()
+                    case .failure(let error):
+                        print(error)
+                        
+                    }
+                }}
+        }
       
     }
     
@@ -222,19 +239,9 @@ extension ViewController: MKMapViewDelegate{
         //set the position of callout
         view.calloutOffset = CGPoint(x: 0, y: 0)
         
-        //add a button to right side of callout
-        
         let button = UIButton(type: .detailDisclosure)
         view.rightCalloutAccessoryView = button
-        
-        //add an image to left side of callout
-        //let image = UIImage(systemName: "graduationcap.circle.fill")
-        
-        
-        //change colour of pin/marker"
-        
-        //change colour of accessories
-        //view.tintColor = UIColor.systemRed
+    
         
         if let myAnnotaion = annotation as? MyAnnotation{
             view.glyphText = myAnnotaion.glyphText
@@ -312,6 +319,48 @@ struct Day: Decodable{
     let avgtemp_c: Float
     let condition: WeatherCondition
 }
+extension ViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        let geocoder = CLGeocoder()
+        geocoder.geocodeAddressString(weatherItem[indexPath.row].location) { [self] (placemark,error) in
+            guard let placemark = placemark?.first,
+                  let locationmap = placemark.location else {
+                return
+            }
+            self.location = locationmap
+            setupMap(location: self.location!)
+            loadWeatherData(search: weatherItem[indexPath.row].location) { result in
+                
+            }
+        }
+        
+    }
+}
 
 
-
+extension ViewController: LocationDelegate, UITableViewDataSource {
+    func locationDelegateDidFinish(with data: WeatherInformation) {
+        weatherItem.append(data)
+        tableView.reloadData()
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return weatherItem.count
+    }
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "mainTableView", for: indexPath)
+        let weatherItem = weatherItem[indexPath.row]
+        var content = cell.defaultContentConfiguration()
+        
+        content.text = weatherItem.location
+        content.secondaryText = "T:\(weatherItem.temp) H:\(weatherItem.temp_h) L:\(weatherItem.temp_l)"
+        content.image = weatherItem.image
+        
+        cell.contentConfiguration = content
+        
+        return cell
+    }
+    
+    
+}
